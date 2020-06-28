@@ -1,0 +1,85 @@
+数据包:{
+  //包头
+  ............
+  //包体(加密)
+  ............
+}packgData;
+
+连接：
+struct{
+    int sockfd;                                        //套接字
+    //读写回调函数
+    (void*)(func)      rhandler;                       //读事件的相关处理方法
+	  (void*)(func)      whandler;                       //写事件的相关处理方法
+    //接收相关buf,以及标志等
+   ............
+   //发生相关buf,队列深度等
+   .............
+   
+   //心跳，超时回收等
+   ................
+   
+}*p_connection_t;
+
+socket处理:{
+//连接池结构
+std::list<p_connection_t>      m_connectionList;                      //连接列表【连接池】
+std::list<p_connection_t>      m_freeconnectionList;                  //空闲连接列表【这里边装的全是空闲的连接】
+std::atomic<int>               m_total_connection_n;                  //连接池总连接数
+std::atomic<int>               m_free_connection_n;                   //连接池空闲连接数
+
+//线程池
+{
+  1.线程池指针
+  2.线程池启动标识
+  3.等等；
+}
+
+//
+  pthread_mutex_t                m_connectionMutex;                     //连接相关互斥量，互斥m_freeconnectionList，m_connectionList
+	pthread_mutex_t                m_recyconnqueueMutex;                  //连接回收队列相关的互斥量
+	std::list<p_connection_t>      m_recyconnectionList;                  //将要释放的连接放这里
+	std::atomic<int>               m_totol_recyconnection_n;              //待释放连接队列大小
+	int                            m_RecyConnectionWaitTime;              //等待这么些秒后才回收连接
+  
+ struct epoll_event             m_events[NGX_MAX_EVENTS];              //用于在epoll_wait()中承载返回的所发生的事件
+	//消息队列
+	std::list<char *>              m_MsgSendQueue;                        //发送数据消息队列
+	std::atomic<int>               m_iSendMsgQueueCount;                  //发消息队列大小
+	//多线程相关
+	std::vector<ThreadItem *>      m_threadVector;                        //线程 容器，容器里是各个线程
+	pthread_mutex_t                m_sendMessageQueueMutex;               //发消息队列互斥量 
+	sem_t                          m_semEventSendQueue;                   //处理发消息线程相关的信号量，线程同步 
+
+ //心跳时间到
+	int                            m_ifkickTimeCount;                     //是否开启心跳时钟，1：开启   0：不开启		
+	pthread_mutex_t                m_timequeueMutex;                      //和时间队列有关的互斥量
+	std::multimap<time_t, LPSTRUC_MSG_HEADER>   m_timerQueuemap;          //时间队列	
+	size_t                         m_cur_size_;                           //时间队列的大小
+	time_t                         m_timer_value_;                        //当前计时队列头部时间值
+  
+  //防止DDOS攻击计数器，时间等
+  ......................
+  //多进程时监听套接字
+  .........................
+}
+
+
+线程池设计：
+{
+    static pthread_mutex_t     m_pthreadMutex;      //线程同步互斥量/也叫线程同步锁
+    static pthread_cond_t      m_pthreadCond;       //线程同步条件变量
+    static bool                m_shutdown;          //线程退出标志，false不退出，true退出
+    int                        m_iThreadNum;        //要创建的线程数量
+    std::atomic<int>           m_iRunningThreadNum; //线程数, 运行中的线程数，原子操作
+    std::vector<ThreadItem *>  m_threadVector;      //线程 容器，容器里是各个线程 
+    //接收消息队列相关
+    std::list<char *>          m_MsgRecvQueue;      //接收数据消息队列 
+	  int                        m_iRecvMsgQueueCount;//收消息队列大小
+}
+
+
+
+
+
+
