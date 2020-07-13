@@ -1,0 +1,11 @@
+1. git config --global user.name "GitHub_Name"
+2.git config --global user.email "GitHub_mail@qq.com"
+3.ssh-keygen -t rsa -C "GitHub_mail@qq.com" (一路回车)
+4.找到C:\Users\xxx\.ssh\id_rsa.pub文件，配置到github ssh key中
+5.git clone [github url];
+6. git add .
+7. git commit -m "提交说明"
+8.git push 
+9.git rm --cached filename 删除超过100M的文件
+10.git commit --amend -CHEAD 提交变动
+ 
