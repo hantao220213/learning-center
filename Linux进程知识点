@@ -1,3 +1,4 @@
+进程参数：
 1.查看系统最大进程数量cat /proc/sys/fs/file-max，修改立即生效sysctl -w fs.file-max=23456789
 2.查看当前用户进程数量ulimit -u，永久修改所有用户打开的进程数量，在/etc/security/limits.conf文件中添加（高并发服务器都需要限制，系统默认1024）
 * soft nofile 65535 
@@ -6,3 +7,20 @@
   原来的进程和fork()出来的子进程可以同时、自由的读取内存，但如果子进程（父进程）对内存进行修改的话，那么这个内存就会复制一份给该进程单独使用，以免影响到共享这个内存空间的；
 4.fork()回返回两次，子进程的fork()返回值是0，父进程的fork()返回值是新建立的子进程的ID，因为全局量g_mygbltest的值发生改变，导致主，子进程内存被单独的分开，所以每个的g_mygbltest值也不同；
 5.僵尸进程处理：第一手动kill掉僵尸进程的父进程，第二可以在主进程中拦截并处理SIGCHLD信号，并调用(wait/waitpid)函数进行处理；
+
+
+守护进程：
+1.ps -eo pid,ppid,sid,tty,pgrp,comm,stat,cmd 查看进程，TT为？时为守护进程,CMD为[进程名]内核守护进程，其余的为用户守护进程；
+2.守护进程是脱离终端，不接受终端的输入输出，他的父进程为init进程；
+3.守护进程的编写规则：调用umask(0)屏蔽一些文件权限，fork一个子进程，父进程退出，调用setsid()建立新的会话，子进程有自己单独的ID，并且成为新进程组的组长，并不关联任何终端；
+4.守护进程不予任何终端挂钩，将标准输入/输出重定向到/dev/null中
+  int fd;
+	fd = open("/dev/null",O_RDWR) ;//打开空设备
+	dup2(fd,STDIN_FILENO); //复制文件描述符  ，像个指针赋值,把第一个参数指向的内容赋给了第二个参数；
+	dup2(fd,STDOUT_FILENO);
+	if(fd > STDERR_FILENO)
+	 close(fd); //等价于fd = null;
+  
+ 5.脱离终端的守护进程可利用的信号：内核的SIGINT(ctr+c), SIGWINCH(终端窗口大小改变) 信号,SIGHUP 信号（ngnix的 ngnix -s reload 命令为此信号）可利用守护进程收到此信号后守护进程重新读取配置文件，
+   关闭老进程，拉起新进程等；
+ 
